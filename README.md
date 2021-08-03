@@ -43,7 +43,7 @@ To understand how this converter works set the function's second argument to tru
 
 #### Examples
 
-`2+3*4` ▶ `2 3 4 mult add`
-`-12+3` ▶ `12 neg 3 add`
-`12^-2` ▶ `12 2 neg pow`
-`((2cm+112)*12.2/3)^2` ▶ `2 cm mult 112 add 12.2 mult 3 div 2 pow`
+`2+3*4` ▶ `2 3 4 mult add`<br>
+`-12+3` ▶ `12 neg 3 add`<br>
+`12^-2` ▶ `12 2 neg pow`<br>
+`((2cm+112)*12.2/3)^2` ▶ `2 cm mult 112 add 12.2 mult 3 div 2 pow`<br>
