@@ -79,6 +79,12 @@ function invert(op: PostfixOperator): PostfixOperator {
     }
 }
 
+/**
+ * Converts infix expressions to postfix (rpn) expressions.
+ * @param expression the infix expression
+ * @param showSteps whether to print debug information to the console (default is false)
+ * @returns the postfix expression
+ */
 export default (expression: string, showSteps = false) => {
     const expressionRaw = expression;
     let result = "";
