@@ -12,21 +12,21 @@ function getPresendence(op: PostfixOperator): number {
         case "plus_exp":
         case "neg_exp":
             return 4;
-        case "pow":
+        case "^":
             return 3;
         case "plus":
-        case "neg":
+        case "−":
             return 2;
-        case "mult":
-        case "div":
+        case "*":
+        case "/":
             return 1;
-        case "sub":
-        case "add":
+        case "-":
+        case "+":
             return 0;
     }
 }
 
-type PostfixOperator = "add" | "sub" | "mult" | "div" | "pow" | "plus" | "neg" | "(" | ")" | "neg_exp" | "plus_exp";
+type PostfixOperator = "+" | "-" | "*" | "/" | "^" | "plus" | "−" | "(" | ")" | "neg_exp" | "plus_exp";
 
 
 
@@ -40,15 +40,15 @@ function infixToPostfixOperator(op: InfixOperator): PostfixOperator {
         case ")":
             return op;
         case "^":
-            return "pow";
+            return "^";
         case "*":
-            return "mult";
+            return "*";
         case "/":
-            return "div";
+            return "/";
         case "+":
-            return "add";
+            return "+";
         case "-":
-            return "sub";
+            return "-";
     }
 }
 
@@ -58,20 +58,20 @@ function invert(op: PostfixOperator): PostfixOperator {
             return ")";
         case ")":
             return "(";
-        case "pow":
+        case "^":
             return ")";
-        case "mult":
-            return "div";
-        case "div":
-            return "mult";
-        case "add":
-            return "sub";
-        case "sub":
-            return "add";
-        case "neg":
+        case "*":
+            return "/";
+        case "/":
+            return "*";
+        case "+":
+            return "-";
+        case "-":
+            return "+";
+        case "−":
             return "plus";
         case "plus":
-            return "neg";
+            return "−";
         case "neg_exp":
             return "plus_exp";
         case "plus_exp":
@@ -134,7 +134,7 @@ export default (expression: string, showSteps = false) => {
                     } else if (charBefore === "^") {
                         postOp = "neg_exp";
                     } else {
-                        postOp = "neg";
+                        postOp = "−";
                     }
                 } else if (currentOp === "+" && charBefore !== ")") {
                     expression = expression.splice(i, 1);
@@ -173,9 +173,14 @@ export default (expression: string, showSteps = false) => {
                 if (!success) {
                     result += operand.getValue() + " ";
                     operand = new Operand(char);
-                    stack.push("mult");
+                    stack.push("*");
                 }
             }
+        } else if (char.match(/\s/)) {
+            if (operand === null) continue;
+            result += operand.getValue() + " ";
+            operand = null;
+            stack.push("*");
         }
     }
     if (operand) result += operand.getValue() + " ";
@@ -191,5 +196,5 @@ export default (expression: string, showSteps = false) => {
     console.log("Stack:", stack)
     console.log("Operand: '" + (operand ? operand.getValue() : "") + "'");
     console.log("#####################################")
-    return result.replace(/neg_exp/g, "neg").trim();
+    return result.replace(/neg_exp/g, "−").replace(/plus_exp/g, "").trim();
 }
