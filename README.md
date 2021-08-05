@@ -40,11 +40,10 @@ Unnecessary operators get removed automatically.
 For example `---+4` gets parsed to `4 −`, `+(12)` gets parsed to `12`.
 
 #### Variable support
-Any variable not containing operator characters (`+`, `-`, ...) is supported. For example `a-6` gets parsed to `a 6 sub`.
+Any variable not containing operator characters (`+`, `-`, ...) is supported. For example `a-6` gets parsed to `a 6 -`.
 
 #### Variable multiplication shortcut support
 A common parser would parse `b/10b` to `b 10b /` - which is unfortunately wrong. This parser recognizes that `10` and `b` are different operands. It parses the string to `b 10 b * /`.
-<\br>
 Added to that `a b` gets parsed to `a b *`.
 
 #### Behind the scenes
