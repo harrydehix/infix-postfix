@@ -10,7 +10,7 @@ import Plus from "./Plus";
 import Subtraction from "./Subtraction";
 
 export default class OperatorUtils {
-    static isOperatorSymbol(value: string) {
+    static isInputOperatorSymbol(value: string) {
         return value === "+" || value === "-" || value === "*" || value === "/" || value === "^" || value === "(" || value === ")"
     }
 
