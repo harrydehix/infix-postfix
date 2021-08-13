@@ -1,6 +1,6 @@
 import { inspect } from "util";
 
-export type OperatorSymbol = "+" | "-" | "−" | "*" | "/" | "^" | ")" | "(" | "&";
+export type OperatorSymbol = "+" | "-" | "−" | "*" | "/" | "^" | ")" | "(";
 export type InputOperatorSymbol = "+" | "-" | "*" | "/" | "^" | ")" | "(";
 
 export default abstract class Operator {
@@ -11,8 +11,6 @@ export default abstract class Operator {
     abstract get presendence(): number;
 
     [inspect.custom](depth?: any, options?: any): string {
-        // console.log(options.stylize.toString())
-        // console.log(inspect.styles)
         return options.stylize(`${this.symbol}`, "special");
     }
 

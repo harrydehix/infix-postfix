@@ -39,8 +39,6 @@ export default class Operand {
     }
 
     [inspect.custom](depth?: any, options?: any): string {
-        // console.log(options.stylize.toString())
-        // console.log(inspect.styles)
         return options.stylize(`${this.value}`, "special");
     }
 
