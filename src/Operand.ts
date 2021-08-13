@@ -1,10 +1,12 @@
+import { inspect } from "util";
+
 export enum OperandType {
     Number,
     Symbol
 }
 
 export default class Operand {
-    private value = "";
+    value = "";
     type: OperandType;
     private dotCount = 0;
 
@@ -31,12 +33,18 @@ export default class Operand {
         return this.value === "";
     }
 
-    getValue() {
-        return this.value;
-    }
-
     static parseOperandType(value: string) {
         if (value.match(/[0-9.]/)) return OperandType.Number;
         else return OperandType.Symbol;
+    }
+
+    [inspect.custom](depth?: any, options?: any): string {
+        // console.log(options.stylize.toString())
+        // console.log(inspect.styles)
+        return options.stylize(`${this.value}`, "special");
+    }
+
+    toString(): string {
+        return this.value.toString();
     }
 }

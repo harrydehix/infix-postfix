@@ -1,200 +1,183 @@
-import Operand from "./Operand";
-import "./stringUtils";
-import "./arrayUtils";
+import IterableString from "./Expression";
+import Operand, { OperandType } from "./Operand";
+import CloseMultiplication from "./operators/CloseMultiplication";
+import CloseNegation from "./operators/CloseNegation";
+import ClosePlus from "./operators/ClosePlus";
+import ClosingBracket from "./operators/ClosingBracket";
+import Exponentiation from "./operators/Exponentiation";
+import Multiplication from "./operators/Multiplication";
+import Negation from "./operators/Negation";
+import OpeningBracket from "./operators/OpeningBracket";
+import Operator, { InputOperatorSymbol } from "./operators/Operator";
+import OperatorUtils from "./operators/OperatorUtils";
+import Plus from "./operators/Plus";
+import Stack from "./Stack";
 
-type InfixOperator = "+" | "-" | "*" | "/" | "(" | ")" | "^";
+class InfixToPostfix {
+    private expression: IterableString;
+    private queue: Stack<Operator | Operand> = new Stack();
+    private current: Operand | Operator | null = null;
+    private postfixExpression: Stack<Operator | Operand> = new Stack();
 
-function getPresendence(op: PostfixOperator): number {
-    switch (op) {
-        case "(":
-        case ")":
-            return 5;
-        case "plus_exp":
-        case "neg_exp":
-            return 4;
-        case "^":
-            return 3;
-        case "plus":
-        case "−":
-            return 2;
-        case "*":
-        case "/":
-            return 1;
-        case "-":
-        case "+":
-            return 0;
+    public toString() {
+        return this.toObjectArray().join(" ");
     }
-}
 
-type PostfixOperator = "+" | "-" | "*" | "/" | "^" | "plus" | "−" | "(" | ")" | "neg_exp" | "plus_exp";
-
-
-
-function isOperator(char: string): boolean {
-    return char === "+" || char === "-" || char === "*" || char === "/" || char === "^" || char === "(" || char === ")"
-}
-
-function infixToPostfixOperator(op: InfixOperator): PostfixOperator {
-    switch (op) {
-        case "(":
-        case ")":
-            return op;
-        case "^":
-            return "^";
-        case "*":
-            return "*";
-        case "/":
-            return "/";
-        case "+":
-            return "+";
-        case "-":
-            return "-";
+    private toObjectArray() {
+        return this.postfixExpression.toArray();
     }
-}
 
-function invert(op: PostfixOperator): PostfixOperator {
-    switch (op) {
-        case "(":
-            return ")";
-        case ")":
-            return "(";
-        case "^":
-            return ")";
-        case "*":
-            return "/";
-        case "/":
-            return "*";
-        case "+":
-            return "-";
-        case "-":
-            return "+";
-        case "−":
-            return "plus";
-        case "plus":
-            return "−";
-        case "neg_exp":
-            return "plus_exp";
-        case "plus_exp":
-            return "neg_exp";
-    }
-}
-
-/**
- * Converts infix expressions to postfix (rpn) expressions.
- * @param expression the infix expression
- * @param showSteps whether to print debug information to the console (default is false)
- * @returns the postfix expression
- */
-export default (expression: string, showSteps = false) => {
-    const expressionRaw = expression;
-    let result = "";
-    const stack: PostfixOperator[] = [];
-    let charBefore: null | string = null;
-    let operand = null;
-
-    if (showSteps) {
-        console.log("#####################################")
-        console.log("Starting...")
-    }
-    for (let i = 0; i < expression.length; i++) {
-        const char = expression[i];
-        if (showSteps) {
-            console.log(`Result: '${result}'`)
-            console.log("Stack: ", stack)
-            console.log("Operand: '" + (operand ? operand.getValue() : "") + "'");
-            console.log("#####################################")
-            console.log(`Input: '${char}'`)
-        }
-        if (i > 0) charBefore = expression[i - 1];
-
-        if (isOperator(char)) {
-            const currentOp = char as InfixOperator;
-            let postOp = infixToPostfixOperator(currentOp);
-
-            if (operand) {
-                result += operand.getValue() + " ";
-                operand = null;
-            }
-            let afterOperator = true;
-            if (charBefore) afterOperator = isOperator(charBefore);
-
-            if (afterOperator) {
-                if (currentOp === "-" && charBefore !== ")") {
-                    if (charBefore === "-") {
-                        expression = expression.splice(i - 1, 2, "+");
-                        stack[stack.length - 1] = invert(stack.top());
-                        i -= 1;
-                        continue;
-                    }
-                    else if (charBefore === "+") {
-                        expression = expression.splice(i - 1, 1);
-                        stack[stack.length - 1] = invert(stack.top());
-                        i -= 1;
-                        continue;
-                    } else if (charBefore === "^") {
-                        postOp = "neg_exp";
-                    } else {
-                        postOp = "−";
-                    }
-                } else if (currentOp === "+" && charBefore !== ")") {
-                    expression = expression.splice(i, 1);
-                    i -= 1;
-                    continue;
-                } else if (currentOp !== "(" && charBefore !== ")") {
-                    throw new Error(`Invalid infix expression '${expressionRaw}'`)
-                }
-            }
-
-            const currentPres = getPresendence(postOp);
-            for (let j = stack.length - 1; j >= 0; j--) {
-                const op = stack[j];
-                if (op === "plus") continue;
-                else if (postOp === ")") {
-                    if (op === "(") {
-                        stack.pop();
-                        break;
-                    }
-                    else result += stack.pop() + " ";
-                } else {
-                    if (op === "(") break;
-                    else if (getPresendence(op) >= currentPres) {
-                        result += stack.pop() + " ";
-                    } else {
-                        break;
-                    }
-                }
-            }
-            if (postOp !== ")") stack.push(postOp);
-        } else if (char.match(/[^\s]/)) {
-            if (!operand) {
-                operand = new Operand(char);
+    public toArray() {
+        const objectArray = this.toObjectArray();
+        const array: (string | number)[] = [];
+        for (const item of objectArray) {
+            if (item instanceof Operator) {
+                array.push(item.symbol);
             } else {
-                const success = operand.append(char);
-                if (!success) {
-                    result += operand.getValue() + " ";
-                    operand = new Operand(char);
-                    stack.push("*");
+                if (item.type === OperandType.Number) array.push(Number(item.value));
+                else array.push(item.value)
+            }
+        }
+        return array;
+    }
+
+    constructor(expression: string) {
+        this.expression = new IterableString(expression);
+        this.parseToQueue();
+        this.parseQueue();
+    }
+
+    private appendCurrent() {
+        const last = this.queue.getLast();
+        // (a+b)(d-e) => (a+b)*(d-e), a(2) => a*(2)
+        if (this.current instanceof OpeningBracket &&
+            (last instanceof Operand || last instanceof ClosingBracket)) {
+            this.queue.push(new Multiplication());
+        }
+        // (3+4)2 = (3+4)*2
+        if (last instanceof ClosingBracket && this.current instanceof Operand) {
+            this.queue.push(new Multiplication());
+        }
+
+        // 2 a => 2*a
+        if (this.current instanceof Operand && last instanceof Operand) {
+            this.queue.push(new Multiplication());
+        }
+
+        // 2^-2/4 => 2^(-2)/4
+        if (last instanceof Exponentiation) {
+            if (this.current instanceof Negation) this.current = new CloseNegation();
+            if (this.current instanceof Plus) this.current = new ClosePlus();
+        }
+
+        this.queue.push(this.current!);
+        this.current = null;
+    }
+
+    private parseToQueue() {
+        while (this.expression.hasNext()) {
+            const currentCharacter = this.expression.next();
+
+            if (OperatorUtils.isOperatorSymbol(currentCharacter)) {
+                const operatorChar = currentCharacter as InputOperatorSymbol;
+
+                if (this.current instanceof Operand) {
+                    this.appendCurrent();
+                    //this.current = null;
+                } else if (this.current instanceof Operator) {
+                    const merged = this.current.merge(operatorChar);
+                    if (merged) {
+                        this.current = merged;
+                    } else {
+                        this.appendCurrent();
+                        //this.current = null;
+                    }
+                }
+
+                if (this.current === null) {
+                    const last = this.queue.getLast();
+                    const preferUnary = !last || (last instanceof Operator && !(last instanceof ClosingBracket));
+                    this.current = OperatorUtils.parse(operatorChar, preferUnary);
+                }
+            } else if (currentCharacter.match(/[^\s]/)) {
+                if (this.current instanceof Operator) {
+                    this.appendCurrent();
+                }
+
+                if (this.current === null) {
+                    this.current = new Operand(currentCharacter);
+                } else {
+                    const merged = (this.current as Operand).append(currentCharacter);
+                    if (!merged) {
+                        // 2a => 2&a
+                        this.appendCurrent();
+                        this.queue.push(new CloseMultiplication());
+                        this.current = new Operand(currentCharacter);
+                    }
+                }
+            } else if (currentCharacter.match(/\s/)) {
+                if (this.current === null || this.current instanceof Operator) continue;
+                // b a !== ba
+                if (this.current instanceof Operand) {
+                    this.appendCurrent();
                 }
             }
-        } else if (char.match(/\s/)) {
-            if (operand === null) continue;
-            result += operand.getValue() + " ";
-            operand = null;
-            stack.push("*");
+        }
+        if (this.current) this.appendCurrent();
+    }
+
+    private parseQueue() {
+        const queueArray = this.queue.toArray();
+        const operatorStack = new Stack<Operator>();
+        for (const item of queueArray) {
+            if (item instanceof Operator) {
+                while (operatorStack.hasItem()) {
+                    const op = operatorStack.getLast()!;
+                    if (item instanceof ClosingBracket) {
+                        // If the current operator is ')' resolve all operators until a '(' operator is reached
+                        if (!(op instanceof OpeningBracket)) {
+                            // Skip plus operators (they can get ignored for mathematical reasons)
+                            if (op instanceof Plus) operatorStack.pop();
+                            // Append other operators
+                            else this.postfixExpression.push(operatorStack.pop()!);
+                        }
+                        else {
+                            // Pop '(' but don't append it
+                            operatorStack.pop();
+                            break;
+                        }
+                    } else {
+                        // If the current operator is a common one resolve all operators
+                        // until a '(' is reached or an operator has a smaller presendence
+                        if (!(op instanceof OpeningBracket) && op.presendence >= item.presendence) {
+                            // Skip plus operators (they can get ignored for mathematical reasons)
+                            if (op instanceof Plus) operatorStack.pop();
+                            // Append other operators
+                            else this.postfixExpression.push(operatorStack.pop()!);
+                        } else {
+                            // Stop resolving if the operator has a smaller presendence or if it is a '('
+                            break;
+                        }
+                    }
+                }
+                if (!(item instanceof ClosingBracket)) operatorStack.push(item);
+            } else {
+                this.postfixExpression.push(item);
+            }
+        }
+        // Resolve remained operators from their stack
+        while (operatorStack.hasItem()) {
+            const op = operatorStack.getLast();
+            if (op instanceof Plus || op instanceof OpeningBracket || op instanceof ClosingBracket) {
+                operatorStack.pop();
+            } else {
+                this.postfixExpression.push(operatorStack.pop()!);
+            }
         }
     }
-    if (operand) result += operand.getValue() + " ";
-    for (let j = stack.length - 1; j >= 0; j--) {
-        const op = stack[j];
-        if (op === "plus" || op === "(" || op === ")") {
-            stack.pop();
-        } else {
-            result += stack.pop() + " ";
-        }
-    }
-    console.log(`Result: '${result}'`)
-    console.log("Stack:", stack)
-    console.log("Operand: '" + (operand ? operand.getValue() : "") + "'");
-    console.log("#####################################")
-    return result.replace(/neg_exp/g, "−").replace(/plus_exp/g, "").trim();
+
+}
+
+export default (expression: string) => {
+    return new InfixToPostfix(expression);
 }
